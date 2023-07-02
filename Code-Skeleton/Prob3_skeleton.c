@@ -10,11 +10,11 @@ struct incidence_pair{
   
 struct incidence_pair getIncidence(char*);           // Computing a histogram of the incidence each letter (ignoring all non alphabet characters)
 char* monoalphabetic_substitution(char*, char*);     // Takes a partial mono-alphabetic substitution (subs)  and a ciphertext and returns a potential plaintext
+/*int cmp(const void *a, const void *b){
+  return (*(struct incidence_pair*)b).freq-(*(struct incidence_pair*)a).freq;
+}*/
 
 int main(int argc, char *argv[]){
-  /*
-  You don't need to edit the main() function in this assignment. 
-  */
   
   char ciphertext[1024] = "ztmn pxtne cfa peqef kecnp cjt tmn zcwsenp ontmjsw ztnws tf wsvp xtfwvfefw, c feb fcwvtf, xtfxevqea vf gvoenwk, cfa aeavxcwea wt wse rntrtpvwvtf wscw cgg lef cne xnecwea eymcg";
   char plaintext[1024] = "";
@@ -52,6 +52,40 @@ struct incidence_pair getIncidence(char *ciphertext){
     - For sorting, you might want to use the qsort() function in C (the quick sort algorithm). 
     - Beside that, you can also use any other function for sorting or re-implement a simple sorting algorithm if you want. 
   */
+  struct incidence_pair ip;
+  for(int i=0; i< 26; i++){
+    ip.c[i] = 'A'+i;
+    ip.freq[i] = 0;
+  }
+  int totalLetters = 0;
+  int len = strlen(ciphertext);
+  for (int i = 0; i < len; i++) {
+    char ch = toupper(ciphertext[i]);
+    if (isalpha(ch)) {
+      int index = ch - 'A';
+      ip.freq[index]++;
+      totalLetters++;
+    }
+  }
+
+  for (int i = 0; i < 26; i++) {
+    ip.freq[i] = (ip.freq[i] / totalLetters);
+  }
+  //qsort(ip,1024,sizeof(ip[0]),cmp);
+  for (int i = 0; i < 25; i++) {
+    for (int j = 0; j < 25 - i; j++) {
+      if (ip.freq[j] < ip.freq[j + 1]) {
+        double tempFreq = ip.freq[j];
+        ip.freq[j] = ip.freq[j + 1];
+        ip.freq[j + 1] = tempFreq;
+
+        char tempChar = ip.c[j];
+        ip.c[j] = ip.c[j + 1];
+        ip.c[j + 1] = tempChar;
+      }
+    }
+  }
+  return ip;
 }
 
 char* monoalphabetic_substitution(char *ciphertext, char *subs){
@@ -75,4 +109,29 @@ char* monoalphabetic_substitution(char *ciphertext, char *subs){
     - You might want to use a FOR loop to iterate over all characters in the ciphertext and replace each one by an appropriated character selected based on the substitution rule "subs". 
 
   */
+ 
+  int len = strlen(ciphertext);
+  char* plaintext = (char*)malloc((len + 1) * sizeof(char));
+  strcpy(plaintext, ciphertext);
+
+  for (int i = 0; i < len; i++) {
+    char ch = plaintext[i];
+    if (isalpha(ch)) {
+      int index = toupper(ch) - 'A';
+      char sub = subs[index];
+      if (sub == '_') {
+        if (islower(ch)) {
+          plaintext[i] = toupper(ch);
+        }
+      } else {
+        if (isupper(ch)) {
+          plaintext[i] = toupper(sub);
+        } else {
+          plaintext[i] = tolower(sub);
+        }
+      }
+    }
+  }
+
+  return plaintext;
 }
